@@ -1527,7 +1527,13 @@ function initJoin(code) {
   document.getElementById('targetCode').textContent = code.toUpperCase();
   showLobbySection('lobbyGuestWait');
   try {
-    net.peer = new Peer({ debug: 1 });
+    net.peer = new Peer(fullId, {
+    host: '0.peerjs.com',
+    port: 443,
+    path: '/',
+    secure: true,
+    debug: 1
+});
   } catch (err) {
     showLobbyError('Не удалось создать Peer: ' + err.message);
     return;
