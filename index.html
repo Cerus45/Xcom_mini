@@ -1499,7 +1499,13 @@ function initHost() {
   net.peerCode = code;
   const fullId = 'xcom-' + code;
   try {
-    net.peer = new Peer(fullId, { debug: 1 });
+    net.peer = new Peer(fullId, {
+    host: 'xcom-mini.fly.dev',
+    port: 443,
+    path: '/',
+    secure: true,
+    debug: 1
+});
   } catch (err) {
     showLobbyError('Не удалось создать Peer: ' + err.message);
     return;
