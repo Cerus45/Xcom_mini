@@ -1498,59 +1498,107 @@ function initHost() {
   const code = Math.random().toString(36).slice(2, 8).toUpperCase();
   net.peerCode = code;
   const fullId = 'xcom-' + code;
+  
+  // Показываем, что идет подключение
+  showLobbySection('lobbyHostWait');
+  document.getElementById('myCode').textContent = "Соединение...";
+
   try {
     net.peer = new Peer(fullId, {
-    host: 'xcom-mini.fly.dev',
-    port: 443,
-    path: '/',
-    secure: true,
-    debug: 1
-});
+        host: 'xcom-mini.fly.dev', // <--- УБЕДИТЕСЬ, ЧТО ЗДЕСЬ НЕТ https:// и слэшей!
+        port: 443,
+        path: '/',                 // <--- ЕСЛИ НЕ РАБОТАЕТ, ПОПРОБУЙТЕ ИЗМЕНИТЬ НА '/peerjs' или '/myapp'
+        secure: true,
+        debug: 2                   // Включаем подробный лог в консоль
+    });
   } catch (err) {
-    showLobbyError('Не удалось создать Peer: ' + err.message);
+    showLobbyError('Ошибка создания Peer: ' + err.message);
+    document.getElementById('myCode').textContent = "Ошибка";
     return;
   }
+
+  // Таймер на 10 секунд. Если сервер не ответил — покажем ошибку
+  const timeout = setTimeout(() => {
+      if (document.getElementById('myCode').textContent === "Соединение...") {
+          showLobbyError('Сервер не отвечает. Проверьте адрес и path в коде.');
+          document.getElementById('myCode').textContent = "Тайм-аут";
+          console.warn("PeerJS не подключился за 10 секунд. Возможно, неверный path или host.");
+      }
+  }, 10000);
+
   net.peer.on('open', (id) => {
+    clearTimeout(timeout);
+    console.log("Успешно подключено к серверу! ID:", id);
     document.getElementById('myCode').textContent = code;
     showLobbySection('lobbyHostWait');
   });
+  
   net.peer.on('connection', (conn) => {
-    // Принимаем только первое соединение
     if (net.conn) { try { conn.close(); } catch(e){} return; }
     setupConnection(conn);
   });
+  
   net.peer.on('error', (err) => {
+    clearTimeout(timeout);
+    console.error("Ошибка PeerJS:", err);
     showLobbyError('PeerJS: ' + err.type);
+    document.getElementById('myCode').textContent = "Ошибка";
   });
-  // Обновим UI для отображения состояния
   net.mySide = 'A';
 }
 function initJoin(code) {
-  if (!code || code.length < 4) { showLobbyError('Введите код комнаты (6 символов)'); return; }
   if (net.peer) { try { net.peer.destroy(); } catch(e){} }
-  net.isHost = false;
-  net.mySide = 'B';
-  document.getElementById('targetCode').textContent = code.toUpperCase();
-  showLobbySection('lobbyGuestWait');
+  net.isHost = true;
+  const code = Math.random().toString(36).slice(2, 8).toUpperCase();
+  net.peerCode = code;
+  const fullId = 'xcom-' + code;
+  
+  // Показываем, что идет подключение
+  showLobbySection('lobbyHostWait');
+  document.getElementById('myCode').textContent = "Соединение...";
+
   try {
     net.peer = new Peer(fullId, {
-    host: 'xcom-mini.fly.dev',
-    port: 443,
-    path: '/',
-    secure: true,
-    debug: 1
-});
+        host: 'xcom-mini.fly.dev', // <--- УБЕДИТЕСЬ, ЧТО ЗДЕСЬ НЕТ https:// и слэшей!
+        port: 443,
+        path: '/',                 // <--- ЕСЛИ НЕ РАБОТАЕТ, ПОПРОБУЙТЕ ИЗМЕНИТЬ НА '/peerjs' или '/myapp'
+        secure: true,
+        debug: 2                   // Включаем подробный лог в консоль
+    });
   } catch (err) {
-    showLobbyError('Не удалось создать Peer: ' + err.message);
+    showLobbyError('Ошибка создания Peer: ' + err.message);
+    document.getElementById('myCode').textContent = "Ошибка";
     return;
   }
-  net.peer.on('open', () => {
-    const conn = net.peer.connect('xcom-' + code.toLowerCase(), { reliable: true });
+
+  // Таймер на 10 секунд. Если сервер не ответил — покажем ошибку
+  const timeout = setTimeout(() => {
+      if (document.getElementById('myCode').textContent === "Соединение...") {
+          showLobbyError('Сервер не отвечает. Проверьте адрес и path в коде.');
+          document.getElementById('myCode').textContent = "Тайм-аут";
+          console.warn("PeerJS не подключился за 10 секунд. Возможно, неверный path или host.");
+      }
+  }, 10000);
+
+  net.peer.on('open', (id) => {
+    clearTimeout(timeout);
+    console.log("Успешно подключено к серверу! ID:", id);
+    document.getElementById('myCode').textContent = code;
+    showLobbySection('lobbyHostWait');
+  });
+  
+  net.peer.on('connection', (conn) => {
+    if (net.conn) { try { conn.close(); } catch(e){} return; }
     setupConnection(conn);
   });
+  
   net.peer.on('error', (err) => {
+    clearTimeout(timeout);
+    console.error("Ошибка PeerJS:", err);
     showLobbyError('PeerJS: ' + err.type);
+    document.getElementById('myCode').textContent = "Ошибка";
   });
+  net.mySide = 'A';
 }
 
 /* ============================ НАСТРОЙКА ============================ */
